@@ -673,17 +673,6 @@ float currentVolume; //Current Volume
         }
     }*/
     
-    // Show
-    /*if (_segmentedControl.selectedSegmentIndex == 0) {
-        // Push
-        [self.navigationController pushViewController:browser animated:YES];
-    } else {
-        // Modal
-        UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:browser];
-        nc.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
-        [self presentViewController:nc animated:YES completion:nil];
-    }*/
-    
     // Modal
     UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:browser];
     nc.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
@@ -751,7 +740,7 @@ float currentVolume; //Current Volume
         };
         
         // Process!
-        [assetLibrary enumerateGroupsWithTypes:ALAssetsGroupAll
+        [assetLibrary enumerateGroupsWithTypes:ALAssetsGroupSavedPhotos
                                          usingBlock:assetGroupEnumerator
                                        failureBlock:^(NSError *error) {
                                            NSLog(@"There is an error");

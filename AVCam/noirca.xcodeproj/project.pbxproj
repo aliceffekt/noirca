@@ -239,6 +239,9 @@
 							com.apple.InterAppAudio = {
 								enabled = 0;
 							};
+							com.apple.Maps.iOS = {
+								enabled = 0;
+							};
 						};
 					};
 				};

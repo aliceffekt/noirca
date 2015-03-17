@@ -76,6 +76,7 @@
     dispatch_queue_t queue;
     
     ALAssetsLibrary * assetLibrary;
+    NSMutableArray *assets;
     float tileSize;
     
     // Hold Trigger Timer
@@ -87,8 +88,6 @@
     // use in case to process a filter over them
     NSMutableArray *photos;
     NSMutableArray *thumbs;
-    
-    NSMutableArray *assets;
 }
 @property (strong, nonatomic) IBOutlet UIImageView *previewThing;
 @property (strong, nonatomic) IBOutlet UIView *gridView;
