@@ -85,6 +85,7 @@
 - (void)viewDidLoad
 {
 	[super viewDidLoad];
+    
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient error:nil];
 	[self start];
 }
@@ -104,6 +105,9 @@
     
     [_videoDevice setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
     [_videoDevice setFocusMode:AVCaptureFocusModeContinuousAutoFocus];
+    
+    // load assets in the background
+    [self loadAssets];
 }
 
 -(void)savingEnabledCheck
@@ -175,6 +179,9 @@
     
 	_touchIndicatorX.frame = CGRectMake( screen.size.width/2, screen.size.height/2, 1,1 );
 	_touchIndicatorY.frame = CGRectMake( screen.size.width/2, screen.size.height/2, 1, 1);
+    
+    _imageSelectionButton.frame = CGRectMake(0, 0, screen.size.width, tileSize);
+    _imageSelectionButton.enabled = NO;
 	
 	_isoTextLabel.alpha = 0;
 	_focusTextLabel.alpha = 0;
@@ -513,7 +520,7 @@
             
             [exifm setObject:[NSNumber numberWithInt:0] forKey:@"Orientation"];
             
-            [[[ALAssetsLibrary alloc] init] writeImageDataToSavedPhotosAlbum:imageData metadata:exifm completionBlock:^(NSURL *assetURL, NSError *error) {
+            [assetLibrary writeImageDataToSavedPhotosAlbum:imageData metadata:exifm completionBlock:^(NSURL *assetURL, NSError *error) {
                 [[UIApplication sharedApplication] endBackgroundTask:bgTask];
                 isRendering--;
             }];
@@ -626,6 +633,135 @@ float currentVolume; //Current Volume
 - (IBAction)modeButton:(id)sender
 {
     [self changeMode:1];
+}
+
+- (IBAction)imageSelectButton:(id)sender {
+    NSLog(@"Touched Image selection button");
+    
+    photos = [NSMutableArray array];
+    thumbs = [NSMutableArray array];
+    
+    // start
+    @synchronized(assets) {
+        NSMutableArray *copy = [assets copy];
+        for (ALAsset *asset in copy) {
+            [photos addObject:[MWPhoto photoWithURL:asset.defaultRepresentation.url]];
+            [thumbs addObject:[MWPhoto photoWithImage:[UIImage imageWithCGImage:asset.thumbnail]]];
+        }
+    }
+    
+    // Create browser
+    MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
+    browser.displayActionButton = YES;
+    browser.displayNavArrows = YES;
+    browser.displaySelectionButtons = NO;
+    browser.alwaysShowControls = YES;
+    browser.zoomPhotosToFill = YES;
+#if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0
+    browser.wantsFullScreenLayout = YES;
+#endif
+    browser.enableGrid = YES;
+    browser.startOnGrid = YES;
+    browser.enableSwipeToDismiss = YES;
+    [browser setCurrentPhotoIndex:0];
+    
+    // Reset selections
+    /*if (browser.displaySelectionButtons) {
+        _selections = [NSMutableArray new];
+        for (int i = 0; i < photos.count; i++) {
+            [_selections addObject:[NSNumber numberWithBool:NO]];
+        }
+    }*/
+    
+    // Show
+    /*if (_segmentedControl.selectedSegmentIndex == 0) {
+        // Push
+        [self.navigationController pushViewController:browser animated:YES];
+    } else {
+        // Modal
+        UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:browser];
+        nc.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+        [self presentViewController:nc animated:YES completion:nil];
+    }*/
+    
+    // Modal
+    UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:browser];
+    nc.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+    [self presentViewController:nc animated:YES completion:nil];
+}
+
+-(NSUInteger)numberOfPhotosInPhotoBrowser:(MWPhotoBrowser *)photoBrowser
+{
+    return photos.count;
+}
+
+-(id<MWPhoto>)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index
+{
+    if(index < photos.count)
+        return [photos objectAtIndex:index];
+    return nil;
+}
+
+- (id <MWPhoto>)photoBrowser:(MWPhotoBrowser *)photoBrowser thumbPhotoAtIndex:(NSUInteger)index {
+    if (index < thumbs.count)
+        return [thumbs objectAtIndex:index];
+    return nil;
+}
+
+- (void)loadAssets {
+    
+    // Initialise
+    assets = [NSMutableArray new];
+    assetLibrary = [[ALAssetsLibrary alloc] init];
+    
+    // Run in the background as it takes a while to get all assets from the library
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        
+        NSMutableArray *assetGroups = [[NSMutableArray alloc] init];
+        NSMutableArray *assetURLDictionaries = [[NSMutableArray alloc] init];
+        
+        // Process assets
+        void (^assetEnumerator)(ALAsset *, NSUInteger, BOOL *) = ^(ALAsset *result, NSUInteger index, BOOL *stop) {
+            if (result != nil) {
+                if ([[result valueForProperty:ALAssetPropertyType] isEqualToString:ALAssetTypePhoto]) {
+                    [assetURLDictionaries addObject:[result valueForProperty:ALAssetPropertyURLs]];
+                    NSURL *url = result.defaultRepresentation.url;
+                    [assetLibrary assetForURL:url
+                                   resultBlock:^(ALAsset *asset) {
+                                       if (asset) {
+                                           @synchronized(assets) {
+                                               [assets addObject:asset];
+                                           }
+                                       }
+                                   }
+                                  failureBlock:^(NSError *error){
+                                      NSLog(@"operation was not successfull!");
+                                  }];
+                    
+                }
+            }
+        };
+        
+        // Process groups
+        void (^ assetGroupEnumerator) (ALAssetsGroup *, BOOL *) = ^(ALAssetsGroup *group, BOOL *stop) {
+            if (group != nil) {
+                [group enumerateAssetsWithOptions:NSEnumerationReverse usingBlock:assetEnumerator];
+                [assetGroups addObject:group];
+            }
+        };
+        
+        // Process!
+        [assetLibrary enumerateGroupsWithTypes:ALAssetsGroupAll
+                                         usingBlock:assetGroupEnumerator
+                                       failureBlock:^(NSError *error) {
+                                           NSLog(@"There is an error");
+                                       }];
+        
+        // all is done, then enable image selection button
+        _imageSelectionButton.enabled = YES;
+        NSLog(@"Successfully loaded assets");
+    });
+    
 }
 
 -(void)changeMode:(int)increment {

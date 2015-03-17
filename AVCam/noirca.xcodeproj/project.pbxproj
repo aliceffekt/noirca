@@ -13,6 +13,13 @@
 		0367E4A81966274200CF5708 /* CoreAudio.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0367E4A71966274200CF5708 /* CoreAudio.framework */; };
 		0367E4AA196627EB00CF5708 /* fx.click.wav in Resources */ = {isa = PBXBuildFile; fileRef = 0367E4A9196627EB00CF5708 /* fx.click.wav */; };
 		03AC729719CC5549001A148D /* tile.png in Resources */ = {isa = PBXBuildFile; fileRef = 03AC729619CC5549001A148D /* tile.png */; };
+		1EF02E5F1AB86D2F00AC41A8 /* MWPhotoBrowser.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 1EF02E5E1AB86D2F00AC41A8 /* MWPhotoBrowser.bundle */; };
+		1EF02E621AB8755A00AC41A8 /* libMWPhotoBrowser.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EF02E5D1AB86D1400AC41A8 /* libMWPhotoBrowser.a */; };
+		1EF02E641AB8766800AC41A8 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EF02E631AB8766800AC41A8 /* MessageUI.framework */; };
+		1EF02E661AB8767300AC41A8 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EF02E651AB8767300AC41A8 /* QuartzCore.framework */; };
+		1EF02E681AB8767A00AC41A8 /* AssetsLibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EF02E671AB8767A00AC41A8 /* AssetsLibrary.framework */; };
+		1EF02E6A1AB8768000AC41A8 /* ImageIO.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EF02E691AB8768000AC41A8 /* ImageIO.framework */; };
+		1EF02E6E1AB8821500AC41A8 /* MapKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EF02E6D1AB8821500AC41A8 /* MapKit.framework */; };
 		2F360BB017692C4700D9A404 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 2F360BAE17692C4700D9A404 /* InfoPlist.strings */; };
 		2F360BB217692C4700D9A404 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F360BB117692C4700D9A404 /* main.m */; };
 		2F360BB617692C4700D9A404 /* AVCamAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F360BB517692C4700D9A404 /* AVCamAppDelegate.m */; };
@@ -27,6 +34,23 @@
 		587F7180742DB1625E8535E2 /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3BB0BAE36FF47C9B04678B08 /* libPods.a */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		1EF02E5C1AB86D1400AC41A8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1EF02E581AB86D1200AC41A8 /* MWPhotoBrowser.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4C6F96C414AF704100F8389A;
+			remoteInfo = MWPhotoBrowser;
+		};
+		1EF02E6B1AB8774000AC41A8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1EF02E581AB86D1200AC41A8 /* MWPhotoBrowser.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4C6F96C314AF704100F8389A;
+			remoteInfo = MWPhotoBrowser;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		031B7E01195CB7FE0065963C /* icon.120.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = icon.120.png; sourceTree = "<group>"; };
 		0367E4A31966272D00CF5708 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
@@ -34,6 +58,13 @@
 		0367E4A71966274200CF5708 /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		0367E4A9196627EB00CF5708 /* fx.click.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = fx.click.wav; sourceTree = "<group>"; };
 		03AC729619CC5549001A148D /* tile.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = tile.png; sourceTree = "<group>"; };
+		1EF02E581AB86D1200AC41A8 /* MWPhotoBrowser.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = MWPhotoBrowser.xcodeproj; path = MWPhotoBrowser/MWPhotoBrowser.xcodeproj; sourceTree = "<group>"; };
+		1EF02E5E1AB86D2F00AC41A8 /* MWPhotoBrowser.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; name = MWPhotoBrowser.bundle; path = MWPhotoBrowser/MWPhotoBrowser.bundle; sourceTree = "<group>"; };
+		1EF02E631AB8766800AC41A8 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
+		1EF02E651AB8767300AC41A8 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		1EF02E671AB8767A00AC41A8 /* AssetsLibrary.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AssetsLibrary.framework; path = System/Library/Frameworks/AssetsLibrary.framework; sourceTree = SDKROOT; };
+		1EF02E691AB8768000AC41A8 /* ImageIO.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ImageIO.framework; path = System/Library/Frameworks/ImageIO.framework; sourceTree = SDKROOT; };
+		1EF02E6D1AB8821500AC41A8 /* MapKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MapKit.framework; path = System/Library/Frameworks/MapKit.framework; sourceTree = SDKROOT; };
 		2F360BA217692C4700D9A404 /* noirca.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = noirca.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2F360BAD17692C4700D9A404 /* noirca-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "noirca-Info.plist"; sourceTree = "<group>"; };
 		2F360BAF17692C4700D9A404 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
@@ -63,6 +94,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1EF02E6E1AB8821500AC41A8 /* MapKit.framework in Frameworks */,
+				1EF02E6A1AB8768000AC41A8 /* ImageIO.framework in Frameworks */,
+				1EF02E681AB8767A00AC41A8 /* AssetsLibrary.framework in Frameworks */,
+				1EF02E661AB8767300AC41A8 /* QuartzCore.framework in Frameworks */,
+				1EF02E641AB8766800AC41A8 /* MessageUI.framework in Frameworks */,
+				1EF02E621AB8755A00AC41A8 /* libMWPhotoBrowser.a in Frameworks */,
 				0367E4A81966274200CF5708 /* CoreAudio.framework in Frameworks */,
 				0367E4A61966273D00CF5708 /* AudioToolbox.framework in Frameworks */,
 				0367E4A41966272D00CF5708 /* AVFoundation.framework in Frameworks */,
@@ -74,9 +111,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1EF02E591AB86D1200AC41A8 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1EF02E5D1AB86D1400AC41A8 /* libMWPhotoBrowser.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		2F360B9917692C4700D9A404 = {
 			isa = PBXGroup;
 			children = (
+				1EF02E5E1AB86D2F00AC41A8 /* MWPhotoBrowser.bundle */,
+				1EF02E581AB86D1200AC41A8 /* MWPhotoBrowser.xcodeproj */,
 				580D3EFE195CC7D800EC0E4B /* Frameworks */,
 				031B7E01195CB7FE0065963C /* icon.120.png */,
 				2F90F0AD178E8C450015CE45 /* ReadMe.txt */,
@@ -130,6 +177,11 @@
 		580D3EFE195CC7D800EC0E4B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				1EF02E6D1AB8821500AC41A8 /* MapKit.framework */,
+				1EF02E691AB8768000AC41A8 /* ImageIO.framework */,
+				1EF02E671AB8767A00AC41A8 /* AssetsLibrary.framework */,
+				1EF02E651AB8767300AC41A8 /* QuartzCore.framework */,
+				1EF02E631AB8766800AC41A8 /* MessageUI.framework */,
 				0367E4A71966274200CF5708 /* CoreAudio.framework */,
 				0367E4A51966273D00CF5708 /* AudioToolbox.framework */,
 				0367E4A31966272D00CF5708 /* AVFoundation.framework */,
@@ -164,6 +216,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				1EF02E6C1AB8774000AC41A8 /* PBXTargetDependency */,
 			);
 			name = noirca;
 			productName = AVCam;
@@ -181,7 +234,7 @@
 				ORGANIZATIONNAME = "Apple Inc";
 				TargetAttributes = {
 					2F360BA117692C4700D9A404 = {
-						DevelopmentTeam = B948MFAE5C;
+						DevelopmentTeam = XGKHW634KL;
 						SystemCapabilities = {
 							com.apple.InterAppAudio = {
 								enabled = 0;
@@ -201,12 +254,28 @@
 			mainGroup = 2F360B9917692C4700D9A404;
 			productRefGroup = 2F360BA317692C4700D9A404 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 1EF02E591AB86D1200AC41A8 /* Products */;
+					ProjectRef = 1EF02E581AB86D1200AC41A8 /* MWPhotoBrowser.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				2F360BA117692C4700D9A404 /* noirca */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		1EF02E5D1AB86D1400AC41A8 /* libMWPhotoBrowser.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libMWPhotoBrowser.a;
+			remoteRef = 1EF02E5C1AB86D1400AC41A8 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		2F360BA017692C4700D9A404 /* Resources */ = {
@@ -220,6 +289,7 @@
 				2F45C1D5177676670052A7F9 /* Main_iPhone.storyboard in Resources */,
 				031B7E02195CB7FE0065963C /* icon.120.png in Resources */,
 				03AC729719CC5549001A148D /* tile.png in Resources */,
+				1EF02E5F1AB86D2F00AC41A8 /* MWPhotoBrowser.bundle in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -273,6 +343,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1EF02E6C1AB8774000AC41A8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = MWPhotoBrowser;
+			targetProxy = 1EF02E6B1AB8774000AC41A8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		2F360BAE17692C4700D9A404 /* InfoPlist.strings */ = {
@@ -370,17 +448,23 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 92AA93EE505A27266A67229E /* Pods.debug.xcconfig */;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				HEADER_SEARCH_PATHS = (
+					"\"${PODS_ROOT}/Headers/Public\"",
+					"\"${PODS_ROOT}/Headers/Public/GPUImage\"",
+				);
 				INFOPLIST_FILE = "AVCam/noirca-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				PRODUCT_NAME = noirca;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
+				USER_HEADER_SEARCH_PATHS = "./MWPhotoBrowser/**";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -389,17 +473,23 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 959CDB71DCC8D1E0145AA011 /* Pods.release.xcconfig */;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				HEADER_SEARCH_PATHS = (
+					"\"${PODS_ROOT}/Headers/Public\"",
+					"\"${PODS_ROOT}/Headers/Public/GPUImage\"",
+				);
 				INFOPLIST_FILE = "AVCam/noirca-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				PRODUCT_NAME = noirca;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = 1;
+				USER_HEADER_SEARCH_PATHS = "./MWPhotoBrowser/**";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
