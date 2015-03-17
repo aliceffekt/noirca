@@ -652,9 +652,9 @@ float currentVolume; //Current Volume
     
     // Create browser
     MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
-    browser.displayActionButton = YES;
+    browser.displayActionButton = NO;
     browser.displayNavArrows = YES;
-    browser.displaySelectionButtons = NO;
+    browser.displaySelectionButtons = YES;
     browser.alwaysShowControls = YES;
     browser.zoomPhotosToFill = YES;
 #if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0
@@ -666,12 +666,10 @@ float currentVolume; //Current Volume
     [browser setCurrentPhotoIndex:0];
     
     // Reset selections
-    /*if (browser.displaySelectionButtons) {
-        _selections = [NSMutableArray new];
-        for (int i = 0; i < photos.count; i++) {
-            [_selections addObject:[NSNumber numberWithBool:NO]];
-        }
-    }*/
+    selections = [NSMutableArray new];
+    for (int i = 0; i < photos.count; i++) {
+        [selections addObject:[NSNumber numberWithBool:NO]];
+    }
     
     // Modal
     UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:browser];
@@ -695,6 +693,27 @@ float currentVolume; //Current Volume
     if (index < thumbs.count)
         return [thumbs objectAtIndex:index];
     return nil;
+}
+
+-(BOOL)photoBrowser:(MWPhotoBrowser *)photoBrowser isPhotoSelectedAtIndex:(NSUInteger)index
+{
+    return [[selections objectAtIndex:index] boolValue];
+}
+
+-(void)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index selectedChanged:(BOOL)selected
+{
+    [selections replaceObjectAtIndex:index withObject:[NSNumber numberWithBool:selected]];
+}
+
+-(void)photoBrowserDidFinishModalPresentation:(MWPhotoBrowser *)photoBrowser
+{
+    // process selected photos with noir filter
+    // TODO: Add processing code here ...
+    
+    // finally dismiss modal view
+    [photoBrowser dismissViewControllerAnimated:YES completion:^{
+        NSLog(@"Dismiss view controller");
+    }];
 }
 
 - (void)loadAssets {
@@ -746,9 +765,9 @@ float currentVolume; //Current Volume
                                            NSLog(@"There is an error");
                                        }];
         
-        // all is done, then enable image selection button
+        // get as much as it can load at this point
         _imageSelectionButton.enabled = YES;
-        NSLog(@"Successfully loaded assets");
+        NSLog(@"Successfully loaded assets so far");
     });
     
 }

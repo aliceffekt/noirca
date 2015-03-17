@@ -88,6 +88,9 @@
     // use in case to process a filter over them
     NSMutableArray *photos;
     NSMutableArray *thumbs;
+    
+    // selections
+    NSMutableArray *selections;
 }
 @property (strong, nonatomic) IBOutlet UIImageView *previewThing;
 @property (strong, nonatomic) IBOutlet UIView *gridView;
