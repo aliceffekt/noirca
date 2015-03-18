@@ -143,19 +143,19 @@
                         NSLog(@"error = %@", error);
                     else
                         NSLog(@"assetURL = %@", assetURL);
+                    
+                    NSLog(@"Finished applying filter");
+                    
+                    // finish with this one
+                    processingMWPhoto = nil;
+                    
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        // hide hud
+                        [MBProgressHUD hideHUDForView:self.view animated:YES];
+                    });
                 }];
                 
                 //[self saveImage:UIImageJPEGRepresentation(processedImage, 1.0) withMode:0 andEXIF:[stillCamera currentCaptureMetadata]];
-                
-                NSLog(@"Finished applying filter");
-                
-                // finish with this one
-                processingMWPhoto = nil;
-                
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    // hide hud
-                    [MBProgressHUD hideHUDForView:self.view animated:YES];
-                });
             }
         });
     }];
@@ -730,6 +730,12 @@ float currentVolume; //Current Volume
 - (IBAction)imageSelectButton:(id)sender {
     NSLog(@"Touched Image selection button");
     
+    dispatch_async(dispatch_get_main_queue(), ^{
+        MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+        hud.mode = MBProgressHUDModeIndeterminate;
+        hud.labelText = @"Displaying ...";
+    });
+    
     photos = [NSMutableArray array];
     thumbs = [NSMutableArray array];
     
@@ -766,7 +772,12 @@ float currentVolume; //Current Volume
     // Modal
     UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:browser];
     nc.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
-    [self presentViewController:nc animated:YES completion:nil];
+    [self presentViewController:nc animated:YES completion:^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // hide hud
+            [MBProgressHUD hideHUDForView:self.view animated:YES];
+        });
+    }];
 }
 
 -(NSUInteger)numberOfPhotosInPhotoBrowser:(MWPhotoBrowser *)photoBrowser
