@@ -53,6 +53,7 @@
 
 
 #import <MediaPlayer/MediaPlayer.h>
+#import "MBProgressHUD/MBProgressHUD.h"
 
 
 @interface AVCamViewController ()
@@ -85,6 +86,7 @@
 - (void)viewDidLoad
 {
 	[super viewDidLoad];
+    
     [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryAmbient error:nil];
 	[self start];
 }
@@ -104,6 +106,62 @@
     
     [_videoDevice setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
     [_videoDevice setFocusMode:AVCaptureFocusModeContinuousAutoFocus];
+    
+    // listen to loading completion event from MWPhoto
+    [[NSNotificationCenter defaultCenter] addObserverForName:MWPHOTO_LOADING_DID_END_NOTIFICATION object:nil queue:nil usingBlock:^(NSNotification *note) {
+        
+        if(processingMWPhoto == nil)
+            return;
+
+        // do a chain filter applying to the selected images
+        // continue from processing MWPhoto
+        UIImage *image = processingMWPhoto.underlyingImage;
+        
+        // apply with noir filter
+        GPUImagePicture *stillImageSource = [[GPUImagePicture alloc] initWithImage:image];
+        
+        [stillImageSource addTarget:noirOutputFilter_forManualApply];
+        [noirOutputFilter_forManualApply useNextFrameForImageCapture];
+        [stillImageSource processImage];
+        
+        UIImage *processedImage = [noirOutputFilter_forManualApply imageFromCurrentFramebuffer];
+        
+        // apply with sharp noir filter
+        GPUImagePicture *stillImageSource2 = [[GPUImagePicture alloc] initWithImage:processedImage];
+        
+        [stillImageSource2 addTarget:sharpOutputFilter_forManualApply];
+        [sharpOutputFilter_forManualApply useNextFrameForImageCapture];
+        [stillImageSource2 processImage];
+        
+        processedImage = [sharpOutputFilter_forManualApply imageFromCurrentFramebuffer];
+        
+        dispatch_async(queue, ^{
+            @autoreleasepool
+            {
+                [assetLibrary writeImageDataToSavedPhotosAlbum:UIImageJPEGRepresentation(processedImage, 1.0) metadata:[stillCamera currentCaptureMetadata] completionBlock:^(NSURL *assetURL, NSError *error) {
+                    if(error)
+                        NSLog(@"error = %@", error);
+                    else
+                        NSLog(@"assetURL = %@", assetURL);
+                    
+                    NSLog(@"Finished applying filter");
+                    
+                    // finish with this one
+                    processingMWPhoto = nil;
+                    
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        // hide hud
+                        [MBProgressHUD hideHUDForView:self.view animated:YES];
+                    });
+                }];
+                
+                //[self saveImage:UIImageJPEGRepresentation(processedImage, 1.0) withMode:0 andEXIF:[stillCamera currentCaptureMetadata]];
+            }
+        });
+    }];
+    
+    // load assets in the background
+    [self loadAssets];
 }
 
 -(void)savingEnabledCheck
@@ -175,6 +233,9 @@
     
 	_touchIndicatorX.frame = CGRectMake( screen.size.width/2, screen.size.height/2, 1,1 );
 	_touchIndicatorY.frame = CGRectMake( screen.size.width/2, screen.size.height/2, 1, 1);
+    
+    _imageSelectionButton.frame = CGRectMake(0, 0, screen.size.width, tileSize);
+    _imageSelectionButton.enabled = NO;
 	
 	_isoTextLabel.alpha = 0;
 	_focusTextLabel.alpha = 0;
@@ -286,6 +347,12 @@
             [_videoDevice addObserver:self forKeyPath:@"lensPosition" options:NSKeyValueObservingOptionNew context:nil];
             [_videoDevice addObserver:self forKeyPath:@"ISO" options:NSKeyValueObservingOptionNew context:nil];
         }
+        
+        // setting up for manual apply
+        noirOutputFilter_forManualApply = [NoirFilter new];
+        sharpOutputFilter_forManualApply = [NoirSharpFilter new];
+        
+        //[noirOutputFilter_forManualApply addTarget:sharpOutputFilter_forManualApply];
     });
     
     [self installVolume];
@@ -431,6 +498,33 @@
 	
 }
 
+-(void) applyFilterToSelectedPhotos
+{
+    if( isAuthorized == 0 ){
+        [self savingEnabledCheck];
+        [self displayModeMessage:@"--"];
+        return;
+    }
+    
+    for(int i=0; i<[selections count]; i++)
+    {
+        NSNumber *selectionNumber = [selections objectAtIndex:i];
+        
+        if([selectionNumber boolValue])
+        {
+            // set to processing MWPhoto
+            processingMWPhoto = [photos objectAtIndex:i];
+            
+            // when it finishes, it will notifies via notification, then we continue
+            // the task at that point.
+            [processingMWPhoto loadUnderlyingImageAndNotify];
+            
+            // TODO: fix this to support multiple photos selection
+            break;
+        }
+    }
+}
+
 -(void) clearBuffers
 {
     [stillCamera stopCameraCapture];
@@ -513,9 +607,14 @@
             
             [exifm setObject:[NSNumber numberWithInt:0] forKey:@"Orientation"];
             
-            [[[ALAssetsLibrary alloc] init] writeImageDataToSavedPhotosAlbum:imageData metadata:exifm completionBlock:^(NSURL *assetURL, NSError *error) {
+            [assetLibrary writeImageDataToSavedPhotosAlbum:imageData metadata:exifm completionBlock:^(NSURL *assetURL, NSError *error) {
                 [[UIApplication sharedApplication] endBackgroundTask:bgTask];
                 isRendering--;
+                
+                if(error)
+                    NSLog(@"error = %@", error);
+                else
+                    NSLog(@"assetURL = %@", assetURL);
             }];
         }
     });
@@ -626,6 +725,170 @@ float currentVolume; //Current Volume
 - (IBAction)modeButton:(id)sender
 {
     [self changeMode:1];
+}
+
+- (IBAction)imageSelectButton:(id)sender {
+    NSLog(@"Touched Image selection button");
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+        hud.mode = MBProgressHUDModeIndeterminate;
+        hud.labelText = @"Displaying ...";
+    });
+    
+    photos = [NSMutableArray array];
+    thumbs = [NSMutableArray array];
+    
+    // start
+    @synchronized(assets) {
+        NSMutableArray *copy = [assets copy];
+        for (ALAsset *asset in copy) {
+            [photos addObject:[MWPhoto photoWithURL:asset.defaultRepresentation.url]];
+            [thumbs addObject:[MWPhoto photoWithImage:[UIImage imageWithCGImage:asset.thumbnail]]];
+        }
+    }
+    
+    // Create browser
+    MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
+    browser.displayActionButton = NO;
+    browser.displayNavArrows = YES;
+    browser.displaySelectionButtons = YES;
+    browser.alwaysShowControls = YES;
+    browser.zoomPhotosToFill = YES;
+#if __IPHONE_OS_VERSION_MIN_REQUIRED < __IPHONE_7_0
+    browser.wantsFullScreenLayout = YES;
+#endif
+    browser.enableGrid = YES;
+    browser.startOnGrid = YES;
+    browser.enableSwipeToDismiss = YES;
+    [browser setCurrentPhotoIndex:0];
+    
+    // Reset selections
+    selections = [NSMutableArray new];
+    for (int i = 0; i < photos.count; i++) {
+        [selections addObject:[NSNumber numberWithBool:NO]];
+    }
+    
+    // Modal
+    UINavigationController *nc = [[UINavigationController alloc] initWithRootViewController:browser];
+    nc.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+    [self presentViewController:nc animated:YES completion:^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // hide hud
+            [MBProgressHUD hideHUDForView:self.view animated:YES];
+        });
+    }];
+}
+
+-(NSUInteger)numberOfPhotosInPhotoBrowser:(MWPhotoBrowser *)photoBrowser
+{
+    return photos.count;
+}
+
+-(id<MWPhoto>)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index
+{
+    if(index < photos.count)
+        return [photos objectAtIndex:index];
+    return nil;
+}
+
+- (id <MWPhoto>)photoBrowser:(MWPhotoBrowser *)photoBrowser thumbPhotoAtIndex:(NSUInteger)index {
+    if (index < thumbs.count)
+        return [thumbs objectAtIndex:index];
+    return nil;
+}
+
+-(BOOL)photoBrowser:(MWPhotoBrowser *)photoBrowser isPhotoSelectedAtIndex:(NSUInteger)index
+{
+    return [[selections objectAtIndex:index] boolValue];
+}
+
+-(void)photoBrowser:(MWPhotoBrowser *)photoBrowser photoAtIndex:(NSUInteger)index selectedChanged:(BOOL)selected
+{
+    [selections replaceObjectAtIndex:index withObject:[NSNumber numberWithBool:selected]];
+}
+
+-(void)photoBrowserDidFinishModalPresentation:(MWPhotoBrowser *)photoBrowser
+{
+    // finally dismiss modal view
+    [photoBrowser dismissViewControllerAnimated:YES completion:^{
+        NSLog(@"Dismiss view controller");
+    }];
+    
+    BOOL atLeastOneIsSelected = NO;
+    for(NSNumber *selected in selections)
+    {
+        if([selected boolValue])
+            atLeastOneIsSelected = YES;
+    }
+    
+    if(atLeastOneIsSelected)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+            hud.mode = MBProgressHUDModeIndeterminate;
+            hud.labelText = @"Applying ...";
+        });
+    }
+    
+    // process selected photos with noir filter
+    [self applyFilterToSelectedPhotos];
+}
+
+- (void)loadAssets {
+    
+    // Initialise
+    assets = [NSMutableArray new];
+    assetLibrary = [[ALAssetsLibrary alloc] init];
+    
+    // Run in the background as it takes a while to get all assets from the library
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        
+        NSMutableArray *assetGroups = [[NSMutableArray alloc] init];
+        NSMutableArray *assetURLDictionaries = [[NSMutableArray alloc] init];
+        
+        // Process assets
+        void (^assetEnumerator)(ALAsset *, NSUInteger, BOOL *) = ^(ALAsset *result, NSUInteger index, BOOL *stop) {
+            if (result != nil) {
+                if ([[result valueForProperty:ALAssetPropertyType] isEqualToString:ALAssetTypePhoto]) {
+                    [assetURLDictionaries addObject:[result valueForProperty:ALAssetPropertyURLs]];
+                    NSURL *url = result.defaultRepresentation.url;
+                    [assetLibrary assetForURL:url
+                                   resultBlock:^(ALAsset *asset) {
+                                       if (asset) {
+                                           @synchronized(assets) {
+                                               [assets addObject:asset];
+                                           }
+                                       }
+                                   }
+                                  failureBlock:^(NSError *error){
+                                      NSLog(@"operation was not successfull!");
+                                  }];
+                    
+                }
+            }
+        };
+        
+        // Process groups
+        void (^ assetGroupEnumerator) (ALAssetsGroup *, BOOL *) = ^(ALAssetsGroup *group, BOOL *stop) {
+            if (group != nil) {
+                [group enumerateAssetsWithOptions:NSEnumerationReverse usingBlock:assetEnumerator];
+                [assetGroups addObject:group];
+            }
+        };
+        
+        // Process!
+        [assetLibrary enumerateGroupsWithTypes:ALAssetsGroupSavedPhotos
+                                         usingBlock:assetGroupEnumerator
+                                       failureBlock:^(NSError *error) {
+                                           NSLog(@"There is an error");
+                                       }];
+        
+        // get as much as it can load at this point
+        _imageSelectionButton.enabled = YES;
+        NSLog(@"Successfully loaded assets so far");
+    });
+    
 }
 
 -(void)changeMode:(int)increment {
