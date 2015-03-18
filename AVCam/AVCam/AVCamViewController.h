@@ -60,6 +60,9 @@
     GPUImageFilter* inputFilter;
     GPUImageFilter* sharpOutputFilter;
     GPUImageFilter* noirOutputFilter;
+    GPUImageFilter* noirOutputFilter_forManualApply;
+    GPUImageFilter* sharpOutputFilter_forManualApply;
+    MWPhoto* processingMWPhoto;
     BOOL capturing;
     
     CGRect screen;

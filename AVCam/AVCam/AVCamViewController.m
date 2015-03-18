@@ -53,6 +53,7 @@
 
 
 #import <MediaPlayer/MediaPlayer.h>
+#import "MBProgressHUD/MBProgressHUD.h"
 
 
 @interface AVCamViewController ()
@@ -105,6 +106,59 @@
     
     [_videoDevice setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
     [_videoDevice setFocusMode:AVCaptureFocusModeContinuousAutoFocus];
+    
+    // listen to loading completion event from MWPhoto
+    [[NSNotificationCenter defaultCenter] addObserverForName:MWPHOTO_LOADING_DID_END_NOTIFICATION object:nil queue:nil usingBlock:^(NSNotification *note) {
+        
+        if(processingMWPhoto == nil)
+            return;
+
+        // do a chain filter applying to the selected images
+        // continue from processing MWPhoto
+        UIImage *image = processingMWPhoto.underlyingImage;
+        
+        // apply with noir filter
+        GPUImagePicture *stillImageSource = [[GPUImagePicture alloc] initWithImage:image];
+        
+        [stillImageSource addTarget:noirOutputFilter_forManualApply];
+        [noirOutputFilter_forManualApply useNextFrameForImageCapture];
+        [stillImageSource processImage];
+        
+        UIImage *processedImage = [noirOutputFilter_forManualApply imageFromCurrentFramebuffer];
+        
+        // apply with sharp noir filter
+        GPUImagePicture *stillImageSource2 = [[GPUImagePicture alloc] initWithImage:processedImage];
+        
+        [stillImageSource2 addTarget:sharpOutputFilter_forManualApply];
+        [sharpOutputFilter_forManualApply useNextFrameForImageCapture];
+        [stillImageSource2 processImage];
+        
+        processedImage = [sharpOutputFilter_forManualApply imageFromCurrentFramebuffer];
+        
+        dispatch_async(queue, ^{
+            @autoreleasepool
+            {
+                [assetLibrary writeImageDataToSavedPhotosAlbum:UIImageJPEGRepresentation(processedImage, 1.0) metadata:[stillCamera currentCaptureMetadata] completionBlock:^(NSURL *assetURL, NSError *error) {
+                    if(error)
+                        NSLog(@"error = %@", error);
+                    else
+                        NSLog(@"assetURL = %@", assetURL);
+                }];
+                
+                //[self saveImage:UIImageJPEGRepresentation(processedImage, 1.0) withMode:0 andEXIF:[stillCamera currentCaptureMetadata]];
+                
+                NSLog(@"Finished applying filter");
+                
+                // finish with this one
+                processingMWPhoto = nil;
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    // hide hud
+                    [MBProgressHUD hideHUDForView:self.view animated:YES];
+                });
+            }
+        });
+    }];
     
     // load assets in the background
     [self loadAssets];
@@ -293,6 +347,12 @@
             [_videoDevice addObserver:self forKeyPath:@"lensPosition" options:NSKeyValueObservingOptionNew context:nil];
             [_videoDevice addObserver:self forKeyPath:@"ISO" options:NSKeyValueObservingOptionNew context:nil];
         }
+        
+        // setting up for manual apply
+        noirOutputFilter_forManualApply = [NoirFilter new];
+        sharpOutputFilter_forManualApply = [NoirSharpFilter new];
+        
+        //[noirOutputFilter_forManualApply addTarget:sharpOutputFilter_forManualApply];
     });
     
     [self installVolume];
@@ -438,6 +498,33 @@
 	
 }
 
+-(void) applyFilterToSelectedPhotos
+{
+    if( isAuthorized == 0 ){
+        [self savingEnabledCheck];
+        [self displayModeMessage:@"--"];
+        return;
+    }
+    
+    for(int i=0; i<[selections count]; i++)
+    {
+        NSNumber *selectionNumber = [selections objectAtIndex:i];
+        
+        if([selectionNumber boolValue])
+        {
+            // set to processing MWPhoto
+            processingMWPhoto = [photos objectAtIndex:i];
+            
+            // when it finishes, it will notifies via notification, then we continue
+            // the task at that point.
+            [processingMWPhoto loadUnderlyingImageAndNotify];
+            
+            // TODO: fix this to support multiple photos selection
+            break;
+        }
+    }
+}
+
 -(void) clearBuffers
 {
     [stillCamera stopCameraCapture];
@@ -523,6 +610,11 @@
             [assetLibrary writeImageDataToSavedPhotosAlbum:imageData metadata:exifm completionBlock:^(NSURL *assetURL, NSError *error) {
                 [[UIApplication sharedApplication] endBackgroundTask:bgTask];
                 isRendering--;
+                
+                if(error)
+                    NSLog(@"error = %@", error);
+                else
+                    NSLog(@"assetURL = %@", assetURL);
             }];
         }
     });
@@ -707,13 +799,29 @@ float currentVolume; //Current Volume
 
 -(void)photoBrowserDidFinishModalPresentation:(MWPhotoBrowser *)photoBrowser
 {
-    // process selected photos with noir filter
-    // TODO: Add processing code here ...
-    
     // finally dismiss modal view
     [photoBrowser dismissViewControllerAnimated:YES completion:^{
         NSLog(@"Dismiss view controller");
     }];
+    
+    BOOL atLeastOneIsSelected = NO;
+    for(NSNumber *selected in selections)
+    {
+        if([selected boolValue])
+            atLeastOneIsSelected = YES;
+    }
+    
+    if(atLeastOneIsSelected)
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:self.view animated:YES];
+            hud.mode = MBProgressHUDModeIndeterminate;
+            hud.labelText = @"Applying ...";
+        });
+    }
+    
+    // process selected photos with noir filter
+    [self applyFilterToSelectedPhotos];
 }
 
 - (void)loadAssets {
