@@ -53,12 +53,16 @@
 #import "NoirSharpFilter.h"
 #import "ScreenAspectRatioCropFilter.h"
 #import <AssetsLibrary/AssetsLibrary.h>
+#import "MWPhotoBrowser.h"
 
-@interface AVCamViewController : UIViewController {
+@interface AVCamViewController : UIViewController <MWPhotoBrowserDelegate> {
     GPUImageStillCamera* stillCamera;
     GPUImageFilter* inputFilter;
     GPUImageFilter* sharpOutputFilter;
     GPUImageFilter* noirOutputFilter;
+    GPUImageFilter* noirOutputFilter_forManualApply;
+    GPUImageFilter* sharpOutputFilter_forManualApply;
+    MWPhoto* processingMWPhoto;
     BOOL capturing;
     
     CGRect screen;
@@ -74,13 +78,22 @@
     AVAudioPlayer * audioPlayer;
     dispatch_queue_t queue;
     
-    ALAssetsLibrary * lib;
+    ALAssetsLibrary * assetLibrary;
+    NSMutableArray *assets;
     float tileSize;
     
     // Hold Trigger Timer
     NSTimer *longPressTimer;
     
     NSString *modeLens;
+    
+    // Photos in library
+    // use in case to process a filter over them
+    NSMutableArray *photos;
+    NSMutableArray *thumbs;
+    
+    // selections
+    NSMutableArray *selections;
 }
 @property (strong, nonatomic) IBOutlet UIImageView *previewThing;
 @property (strong, nonatomic) IBOutlet UIView *gridView;
@@ -109,8 +122,10 @@
 @property (strong, nonatomic) IBOutlet UIView *loadingIndicator;
 @property (strong, nonatomic) IBOutlet UIView *touchIndicatorX;
 @property (strong, nonatomic) IBOutlet UIView *touchIndicatorY;
+@property (weak, nonatomic) IBOutlet UIButton *imageSelectionButton;
 
 - (IBAction)modeButton:(id)sender;
+- (IBAction)imageSelectButton:(id)sender;
 
 @end
 
